@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=logout" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&display=swap"
+        rel="stylesheet">
+    <title>Triagem de materiais - Coopersel</title>
+</head>
+
+<body class="bg-gray-300 min-h-screen p-4 md:p-8">
+    <header
+        class="bg-white p-4 w-full md:w-2/3 flex flex-wrap items-center justify-between mt-4 mx-auto rounded-2xl shadow-lg border-b-4 border-blue-700 shadow-xl">
+        <div class="flex items-center gap-4">
+            <div
+                class="bg-orange-400 py-2 md:py-4 w-12 sm:w-16 flex items-center justify-center text-white font-bold rounded-2xl font-merriweather text-lg md:text-2xl hover:scale-105 transition duration-300 ease-in-out">
+                CP
+            </div>
+            <p class="font-merriweather font-semibold text-base sm:text-lg md:text-2xl text-black hidden sm:block">
+                Triagem de materiais
+            </p>
+        </div>
+        <button id="btn-sair"
+            class="bg-blue-700 hover:bg-orange-400 hover:scale-105 transition duration-300 ease-in-out text-white font-bold px-6 sm:px-10 py-2 md:py-4 rounded-2xl flex items-center gap-2 text-sm sm:text-base">
+            <span class="material-symbols-outlined text-base sm:text-xl">logout</span>
+            <span class="hidden sm:inline">Sair</span>
+        </button>
+    </header>
+    <main class="bg-white w-full md:w-2/3 mx-auto mt-4 rounded-2xl shadow-lg border-b-4 border-blue-700 shadow-xl p-8">
+
+        <form id="materiais-form" class="flex flex-col gap-5">
+            <div class="flex flex-col gap-1">
+                <label for="procedencia" class="font-merriweather font-semibold text-gray-700">Procedência:</label>
+                <select name="procedencia" id="procedencia" required
+                    class="border-2 border-gray-300 rounded-xl px-4 py-2 focus:border-blue-700 focus:outline-none transition duration-300">
+                    <option value="">Selecione a procedência</option>
+                    <option value="mesa_1">Mesa 1</option>
+                    <option value="mesa_2">Mesa 2</option>
+                    <option value="mesa_3">Mesa 3</option>
+                </select>
+            </div>
+            <div class="flex flex-col gap-1">
+                <label for="tipo_de_material" class="font-merriweather font-semibold text-gray-700">Tipo de
+                    Material:</label>
+                <select name="tipo_de_material" id="tipo_de_material" required
+                    class="border-2 border-gray-300 rounded-xl px-4 py-2 focus:border-blue-700 focus:outline-none transition duration-300">
+                    <option value="">Selecione um tipo</option>
+                    <option value="metal">Metal</option>
+                    <option value="plastico">Plástico</option>
+                    <option value="papel">Papel</option>
+                </select>
+            </div>
+            <div class="flex flex-col gap-1">
+                <label for="bags" class="font-merriweather font-semibold text-gray-700">Bags:</label>
+                <input type="number" id="bags" name="bags" step="1" required
+                    class="border-2 border-gray-300 rounded-xl px-4 py-2 focus:border-blue-700 focus:outline-none transition duration-300">
+            </div>
+            <div class="flex flex-col gap-1">
+                <label for="rejeito" class="font-merriweather font-semibold text-gray-700">Rejeito (Kg):</label>
+                <input type="number" id="rejeito" name="rejeito" step="0.01" required
+                    class="border-2 border-gray-300 rounded-xl px-4 py-2 focus:border-blue-700 focus:outline-none transition duration-300">
+            </div>
+            <button type="submit"
+                class="bg-blue-700 hover:bg-orange-400 hover:scale-105 transition duration-300 transition-all ease-in-out text-white font-bold px-10 py-3 rounded-2xl font-merriweather mt-4">
+                Enviar
+            </button>
+        </form>
+    </main>
+
+    <script src="../js/triagem.js"></script>
+</body>
+
+</html>
