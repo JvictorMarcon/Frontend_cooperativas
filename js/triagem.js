@@ -30,7 +30,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const procedencia = document.getElementById("procedencia").value; // "mesa_1", "mesa_2", "mesa_3"
             const tipo_de_material = document.getElementById("tipo_de_material").value;
-            const bags = parseInt(document.getElementById("bags").value);
             const rejeito = parseFloat(document.getElementById("rejeito").value);
 
             // Obter o id numérico da mesa
@@ -50,7 +49,6 @@ document.addEventListener("DOMContentLoaded", () => {
                     body: JSON.stringify({
                         mesa_id,
                         material_tipo: tipo_de_material,
-                        qntd_bags: bags,
                         peso_rejeito: rejeito,
                         cooperativa: currentCoop
                     })

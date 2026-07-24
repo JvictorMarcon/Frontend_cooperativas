@@ -103,6 +103,22 @@
                     <input type="hidden" id="tipo" name="tipo" value="true">
                 </div>
 
+                <!-- Método de Pagamento (apenas para Entrada) -->
+                <div id="container-metodo-pagamento" class="flex flex-col gap-1">
+                    <label for="metodo_pagamento" class="font-merriweather font-semibold text-gray-700 text-sm md:text-base">
+                        Forma de Pagamento
+                    </label>
+                    <select id="metodo_pagamento" name="metodo_pagamento" required
+                        class="border-2 border-gray-300 rounded-xl px-4 py-3 focus:border-blue-700 focus:outline-none transition duration-300 bg-white text-gray-800">
+                        <option value="">Selecione a forma de pagamento</option>
+                        <option value="dinheiro">Dinheiro</option>
+                        <option value="pix">Pix</option>
+                        <option value="credito">Cartão de Crédito</option>
+                        <option value="debito">Cartão de Débito</option>
+                        <option value="outro">Outro</option>
+                    </select>
+                </div>
+
                 <!-- Campo motivo -->
                 <div class="flex flex-col gap-1">
                     <label for="motivo" class="font-merriweather font-semibold text-gray-700 text-sm md:text-base">

@@ -1,4 +1,11 @@
 document.addEventListener("DOMContentLoaded", () => {
+    // Instâncias Globais de Gráficos
+    let chartPrensaInstance = null;
+    let chartRecebimentoInstance = null;
+    let chartEtapasInstance = null;
+    let chartBazarInstance = null;
+    let chartMetodosInstance = null;
+
     // 1. Identificar a cooperativa com base na URL
     const pathDecoded = decodeURIComponent(window.location.pathname).toLowerCase();
     const isSantaMaria = pathDecoded.includes("santa maria");
@@ -51,20 +58,25 @@ document.addEventListener("DOMContentLoaded", () => {
         recebimento: document.getElementById("tab-recebimento"),
         triagem: document.getElementById("tab-triagem"),
         prensa: document.getElementById("tab-prensa"),
-        bazar: document.getElementById("tab-bazar")
+        bazar: document.getElementById("tab-bazar"),
+        graficos: document.getElementById("tab-graficos")
     };
 
     const tabTables = {
         recebimento: document.getElementById("table-recebimento-el"),
         triagem: document.getElementById("table-triagem-el"),
         prensa: document.getElementById("table-prensa-el"),
-        bazar: document.getElementById("table-bazar-el")
+        bazar: document.getElementById("table-bazar-el"),
+        graficos: document.getElementById("container-graficos")
     };
 
     Object.keys(tabButtons).forEach(tabKey => {
-        tabButtons[tabKey].addEventListener("click", () => {
-            switchTab(tabKey);
-        });
+        const btn = tabButtons[tabKey];
+        if (btn) {
+            btn.addEventListener("click", () => {
+                switchTab(tabKey);
+            });
+        }
     });
 
     function switchTab(selectedTab) {
@@ -73,24 +85,37 @@ document.addEventListener("DOMContentLoaded", () => {
         // Atualizar estilos dos botões
         Object.keys(tabButtons).forEach(tabKey => {
             const btn = tabButtons[tabKey];
-            if (tabKey === selectedTab) {
-                btn.classList.add("text-blue-700", "border-blue-700");
-                btn.classList.remove("text-gray-500", "border-transparent");
-            } else {
-                btn.classList.remove("text-blue-700", "border-blue-700");
-                btn.classList.add("text-gray-500", "border-transparent");
+            if (btn) {
+                if (tabKey === selectedTab) {
+                    btn.classList.add("text-blue-700", "border-blue-700");
+                    btn.classList.remove("text-gray-500", "border-transparent");
+                } else {
+                    btn.classList.remove("text-blue-700", "border-blue-700");
+                    btn.classList.add("text-gray-500", "border-transparent");
+                }
             }
         });
 
         // Atualizar visibilidade das tabelas
         Object.keys(tabTables).forEach(tabKey => {
             const tbl = tabTables[tabKey];
-            if (tabKey === selectedTab) {
-                tbl.classList.remove("hidden");
-            } else {
-                tbl.classList.add("hidden");
+            if (tbl) {
+                if (tabKey === selectedTab) {
+                    tbl.classList.remove("hidden");
+                } else {
+                    tbl.classList.add("hidden");
+                }
             }
         });
+
+        const exportsContainer = document.getElementById("exports-container");
+        if (exportsContainer) {
+            if (selectedTab === "graficos") {
+                exportsContainer.classList.add("hidden");
+            } else {
+                exportsContainer.classList.remove("hidden");
+            }
+        }
 
         renderData();
     }
@@ -142,9 +167,12 @@ document.addEventListener("DOMContentLoaded", () => {
         const totalPeso = filteredData.recebimento.reduce((sum, item) => sum + (parseFloat(item.peso_total) || 0), 0);
         document.getElementById("stat-peso-total").textContent = `${totalPeso.toFixed(2)} Kg`;
 
-        // Bags na Triagem
-        const totalBags = filteredData.triagem.reduce((sum, item) => sum + (parseInt(item.qntd_bags) || 0), 0);
-        document.getElementById("stat-bags").textContent = totalBags;
+        // Rejeito na Triagem
+        const totalRejeito = filteredData.triagem.reduce((sum, item) => sum + (parseFloat(item.peso_rejeito) || 0), 0);
+        const statRejeitoEl = document.getElementById("stat-rejeito");
+        if (statRejeitoEl) {
+            statRejeitoEl.textContent = `${totalRejeito.toFixed(2)} Kg`;
+        }
 
         // Fardos Produzidos
         const totalFardos = filteredData.prensa.reduce((sum, item) => sum + (parseInt(item.qtd_fardos_prensa) || 0), 0);
@@ -196,22 +224,35 @@ document.addEventListener("DOMContentLoaded", () => {
 
         renderStats(filtered);
 
-        // Renderizar a aba ativa
+        const emptyEl = document.getElementById("table-empty");
+
+        // Renderizar aba gráficos
+        if (activeTab === "graficos") {
+            emptyEl.classList.add("hidden");
+            Object.keys(tabTables).forEach(tabKey => {
+                if (tabKey !== "graficos" && tabTables[tabKey]) {
+                    tabTables[tabKey].classList.add("hidden");
+                }
+            });
+            document.getElementById("container-graficos").classList.remove("hidden");
+            updateCharts(filtered);
+            return;
+        }
+
         const activeList = filtered[activeTab];
         const tbody = document.getElementById(`tbody-${activeTab}`);
         const tableEl = document.getElementById(`table-${activeTab}-el`);
-        const emptyEl = document.getElementById("table-empty");
 
         tbody.innerHTML = "";
 
         if (activeList.length === 0) {
-            tableEl.classList.add("hidden");
+            if (tableEl) tableEl.classList.add("hidden");
             emptyEl.classList.remove("hidden");
             return;
         }
 
         emptyEl.classList.add("hidden");
-        tableEl.classList.remove("hidden");
+        if (tableEl) tableEl.classList.remove("hidden");
 
         activeList.forEach(item => {
             let rowHTML = "";
@@ -233,7 +274,6 @@ document.addEventListener("DOMContentLoaded", () => {
                     <tr class="hover:bg-gray-50 transition border-b border-gray-100">
                         <td class="px-6 py-4 font-semibold">Mesa ${item.mesa_id}</td>
                         <td class="px-6 py-4 capitalize">${item.material_tipo}</td>
-                        <td class="px-6 py-4">${item.qntd_bags}</td>
                         <td class="px-6 py-4 text-red-600 font-semibold">${parseFloat(item.peso_rejeito).toFixed(2)} Kg</td>
                         <td class="px-6 py-4 text-gray-500">${dataFormatada}</td>
                     </tr>
@@ -253,10 +293,15 @@ document.addEventListener("DOMContentLoaded", () => {
                     ? `<span class="px-2 py-1 bg-green-50 text-green-800 rounded-full text-xs font-semibold flex items-center gap-1 w-fit"><span class="material-symbols-outlined text-xs">arrow_upward</span>Entrada</span>`
                     : `<span class="px-2 py-1 bg-red-50 text-red-800 rounded-full text-xs font-semibold flex items-center gap-1 w-fit"><span class="material-symbols-outlined text-xs">arrow_downward</span>Saída</span>`;
 
+                const metodoBadge = isEntrada && item.metodo_pagamento
+                    ? `<span class="px-2 py-0.5 bg-blue-50 text-blue-800 rounded text-xs font-semibold uppercase">${item.metodo_pagamento}</span>`
+                    : `<span class="text-gray-400">-</span>`;
+
                 rowHTML = `
                     <tr class="hover:bg-gray-50 transition border-b border-gray-100">
                         <td class="px-6 py-4 font-bold ${isEntrada ? 'text-green-600' : 'text-red-600'}">R$ ${parseFloat(item.valor).toFixed(2)}</td>
                         <td class="px-6 py-4">${tipoBadge}</td>
+                        <td class="px-6 py-4">${metodoBadge}</td>
                         <td class="px-6 py-4">${item.motivo}</td>
                         <td class="px-6 py-4 text-gray-500">${dataFormatada}</td>
                     </tr>
@@ -369,6 +414,191 @@ document.addEventListener("DOMContentLoaded", () => {
 
         doc.save(`relatorio_${activeTab}_${currentCoop.replace(" ", "_")}.pdf`);
     });
+
+    // Função para desenhar e atualizar os gráficos
+    function updateCharts(filtered) {
+        if (chartPrensaInstance) chartPrensaInstance.destroy();
+        if (chartRecebimentoInstance) chartRecebimentoInstance.destroy();
+        if (chartEtapasInstance) chartEtapasInstance.destroy();
+        if (chartBazarInstance) chartBazarInstance.destroy();
+
+        // --- CHART 1: Prensa (Rosca) ---
+        const prensaCanvas = document.getElementById("chart-materiais-prensa");
+        if (prensaCanvas) {
+            const matPrensa = {};
+            filtered.prensa.forEach(item => {
+                const tipo = (item.material_tipo || "Outros").toLowerCase();
+                const peso = parseFloat(item.qnt_material_final) || 0;
+                matPrensa[tipo] = (matPrensa[tipo] || 0) + peso;
+            });
+
+            const labels = Object.keys(matPrensa).map(l => l.charAt(0).toUpperCase() + l.slice(1));
+            const data = Object.values(matPrensa);
+
+            chartPrensaInstance = new Chart(prensaCanvas, {
+                type: 'doughnut',
+                data: {
+                    labels: labels.length > 0 ? labels : ["Sem dados"],
+                    datasets: [{
+                        data: data.length > 0 ? data : [0],
+                        backgroundColor: ['#3b82f6', '#f97316', '#10b981', '#a855f7', '#64748b'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+        }
+
+        // --- CHART 2: Recebimento (Barras) ---
+        const recCanvas = document.getElementById("chart-materiais-recebimento");
+        if (recCanvas) {
+            const matRec = {};
+            filtered.recebimento.forEach(item => {
+                const tipo = (item.material_tipo || "Outros").toLowerCase();
+                const peso = parseFloat(item.peso_total) || 0;
+                matRec[tipo] = (matRec[tipo] || 0) + peso;
+            });
+
+            const labels = Object.keys(matRec).map(l => l.charAt(0).toUpperCase() + l.slice(1));
+            const data = Object.values(matRec);
+
+            chartRecebimentoInstance = new Chart(recCanvas, {
+                type: 'bar',
+                data: {
+                    labels: labels.length > 0 ? labels : ["Sem dados"],
+                    datasets: [{
+                        label: 'Peso Recebido (Kg)',
+                        data: data.length > 0 ? data : [0],
+                        backgroundColor: '#3b82f6',
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        // --- CHART 3: Registros por Etapa (Colunas) ---
+        const etapasCanvas = document.getElementById("chart-registros-etapa");
+        if (etapasCanvas) {
+            const etapasData = [
+                filtered.recebimento.length,
+                filtered.triagem.length,
+                filtered.prensa.length,
+                filtered.bazar.length
+            ];
+
+            chartEtapasInstance = new Chart(etapasCanvas, {
+                type: 'bar',
+                data: {
+                    labels: ['Recebimento', 'Triagem', 'Prensa', 'Bazar'],
+                    datasets: [{
+                        label: 'Número de Registros',
+                        data: etapasData,
+                        backgroundColor: ['#2563eb', '#f97316', '#16a34a', '#7c3aed'],
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { precision: 0 } }
+                    }
+                }
+            });
+        }
+
+        // --- CHART 4: Balanço Bazar (Pizza) ---
+        const bazarCanvas = document.getElementById("chart-bazar-balanco");
+        if (bazarCanvas) {
+            let entradas = 0;
+            let saidas = 0;
+            filtered.bazar.forEach(item => {
+                const valor = parseFloat(item.valor) || 0;
+                const isEntrada = item.entrada === true || String(item.entrada).toLowerCase() === "true" || String(item.entrada).toLowerCase() === "entrada";
+                if (isEntrada) entradas += valor;
+                else saidas += valor;
+            });
+
+            chartBazarInstance = new Chart(bazarCanvas, {
+                type: 'pie',
+                data: {
+                    labels: ['Entradas', 'Saídas'],
+                    datasets: [{
+                        data: [entradas, saidas],
+                        backgroundColor: ['#10b981', '#ef4444'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+        }
+
+        // --- CHART 5: Métodos de Pagamento (Rosca) ---
+        const metodosCanvas = document.getElementById("chart-metodos-pagamento");
+        if (metodosCanvas) {
+            if (chartMetodosInstance) chartMetodosInstance.destroy();
+            const metodos = {};
+            filtered.bazar.forEach(item => {
+                const isEntrada = item.entrada === true || String(item.entrada).toLowerCase() === "true" || String(item.entrada).toLowerCase() === "entrada";
+                if (isEntrada && item.metodo_pagamento) {
+                    const m = item.metodo_pagamento.toLowerCase();
+                    metodos[m] = (metodos[m] || 0) + 1;
+                }
+            });
+
+            const labels = Object.keys(metodos).map(l => l.charAt(0).toUpperCase() + l.slice(1));
+            const data = Object.values(metodos);
+
+            chartMetodosInstance = new Chart(metodosCanvas, {
+                type: 'doughnut',
+                data: {
+                    labels: labels.length > 0 ? labels : ["Sem dados"],
+                    datasets: [{
+                        data: data.length > 0 ? data : [0],
+                        backgroundColor: ['#3b82f6', '#10b981', '#f97316', '#a855f7', '#f43f5e', '#64748b'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => ` ${ctx.label}: ${ctx.parsed} uso(s)`
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    }
 
     // Iniciar
     fetchData();
