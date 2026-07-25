@@ -647,7 +647,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (sexoCanvas) {
             if (chartSexoInstance) chartSexoInstance.destroy();
             const contagem = {};
-            rawData.cooperados.forEach(c => {
+            filtered.cooperados.forEach(c => {
                 const sexo = (c.sexo || "Não informado").trim();
                 contagem[sexo] = (contagem[sexo] || 0) + 1;
             });
