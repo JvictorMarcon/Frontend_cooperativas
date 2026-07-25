@@ -60,6 +60,10 @@
             </div>
             
             <div class="flex items-center gap-4">
+                <a href="../cadastrar_cooperado.html" class="bg-green-700 hover:bg-green-600 hover:scale-105 transition duration-300 ease-in-out text-white font-bold px-3 py-2 sm:px-4 sm:py-2 rounded-xl flex items-center gap-2 text-sm shadow-sm">
+                    <span class="material-symbols-outlined text-lg">person_add</span>
+                    <span class="hidden sm:inline">Cadastrar Cooperado</span>
+                </a>
                 <div class="hidden md:flex flex-col text-right">
                     <span class="text-sm font-semibold text-gray-700" id="user-display">Tesoureira</span>
                     <span class="text-xs text-gray-400 uppercase tracking-widest font-bold">Santa Maria</span>
@@ -158,6 +162,9 @@
                     <button class="tab-btn px-4 py-2 font-semibold text-sm border-b-2 border-transparent text-gray-500 hover:text-blue-700 transition" id="tab-bazar">
                         Bazar
                     </button>
+                    <button class="tab-btn px-4 py-2 font-semibold text-sm border-b-2 border-transparent text-gray-500 hover:text-blue-700 transition" id="tab-cooperados">
+                        Cooperados
+                    </button>
                     <button class="tab-btn px-4 py-2 font-semibold text-sm border-b-2 border-transparent text-gray-500 hover:text-blue-700 transition" id="tab-graficos">
                         Gráficos
                     </button>
@@ -248,6 +255,25 @@
                         <!-- Filled by JS -->
                     </tbody>
                 </table>
+
+                <!-- Cooperados Table -->
+                <table class="min-w-full divide-y divide-gray-200 text-sm hidden" id="table-cooperados-el">
+                    <thead>
+                        <tr class="bg-gray-50 text-gray-500 uppercase tracking-wider text-xs font-semibold">
+                            <th class="px-6 py-3 text-left">Cooperativa</th>
+                            <th class="px-6 py-3 text-left">Nome</th>
+                            <th class="px-6 py-3 text-left">CPF</th>
+                            <th class="px-6 py-3 text-left">Função</th>
+                            <th class="px-6 py-3 text-left">Telefone</th>
+                            <th class="px-6 py-3 text-left">Sexo</th>
+                            <th class="px-6 py-3 text-left">Status</th>
+                            <th class="px-6 py-3 text-center">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 text-gray-700 bg-white" id="tbody-cooperados">
+                        <!-- Filled by JS -->
+                    </tbody>
+                </table>
                 
                 <!-- Graficos Container -->
                 <div id="container-graficos" class="hidden flex flex-col gap-6 w-full">
@@ -285,10 +311,17 @@
                     </div>
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full mt-6">
                         <!-- Chart 5: Métodos de Pagamento -->
-                        <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col items-center w-full lg:col-span-2">
+                        <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col items-center w-full">
                             <h4 class="text-sm font-bold text-gray-700 mb-4 text-center">Formas de Pagamento Mais Usadas (Entradas do Bazar)</h4>
-                            <div class="w-full max-w-[420px] aspect-square relative flex justify-center items-center">
+                            <div class="w-full max-w-[320px] aspect-square relative flex justify-center items-center">
                                 <canvas id="chart-metodos-pagamento" class="w-full h-full"></canvas>
+                            </div>
+                        </div>
+                        <!-- Chart 6: Cooperados por Sexo -->
+                        <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col items-center w-full">
+                            <h4 class="text-sm font-bold text-gray-700 mb-4 text-center">Cooperados por Sexo</h4>
+                            <div class="w-full max-w-[320px] aspect-square relative flex justify-center items-center">
+                                <canvas id="chart-cooperados-sexo" class="w-full h-full"></canvas>
                             </div>
                         </div>
                     </div>
@@ -301,6 +334,68 @@
             </div>
         </div>
     </main>
+
+    <!-- Modal Editar Cooperado -->
+    <div id="modal-editar-cooperado" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl shadow-xl border border-gray-200 max-w-xl w-full p-6 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center pb-4 border-b border-gray-200 mb-4">
+                <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-blue-700">edit_square</span>
+                    Editar Cooperado
+                </h3>
+                <button type="button" id="btn-fechar-modal-editar" class="text-gray-400 hover:text-gray-600">
+                    <span class="material-symbols-outlined text-xl">close</span>
+                </button>
+            </div>
+            <form id="form-editar-cooperado" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <input type="hidden" id="edit-cpf">
+                <input type="hidden" id="edit-cooperativa">
+
+                <div class="sm:col-span-2">
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Nome Completo</label>
+                    <input type="text" id="edit-nome" required class="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:border-blue-700 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Função</label>
+                    <input type="text" id="edit-funcao" required class="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:border-blue-700 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Telefone</label>
+                    <input type="text" id="edit-telefone" required class="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:border-blue-700 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">RG</label>
+                    <input type="text" id="edit-rg" required class="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:border-blue-700 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Idade</label>
+                    <input type="number" id="edit-idade" required class="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:border-blue-700 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Data Nasc.</label>
+                    <input type="date" id="edit-dt-nascimento" required class="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:border-blue-700 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Sexo</label>
+                    <select id="edit-sexo" required class="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:border-blue-700 focus:outline-none">
+                        <option value="Masculino">Masculino</option>
+                        <option value="Feminino">Feminino</option>
+                        <option value="Outro">Outro</option>
+                    </select>
+                </div>
+                <div class="sm:col-span-2">
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Endereço</label>
+                    <input type="text" id="edit-endereco" required class="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:border-blue-700 focus:outline-none">
+                </div>
+                <div class="sm:col-span-2 flex justify-end gap-3 mt-4 pt-4 border-t border-gray-200">
+                    <button type="button" id="btn-cancelar-modal-editar" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold px-4 py-2 rounded-xl text-sm transition">Cancelar</button>
+                    <button type="submit" id="btn-salvar-modal-editar" class="bg-blue-700 hover:bg-blue-800 text-white font-bold px-4 py-2 rounded-xl text-sm transition flex items-center gap-1">
+                        <span class="material-symbols-outlined text-sm">save</span> Salvar Alterações
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <!-- Footer -->
     <footer class="bg-white border-t border-gray-200 py-4 text-center text-xs text-gray-400">

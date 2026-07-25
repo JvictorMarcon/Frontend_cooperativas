@@ -5,6 +5,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let chartEtapasInstance = null;
     let chartBazarInstance = null;
     let chartMetodosInstance = null;
+    let chartSexoInstance = null;
 
     // 1. Identificar a cooperativa com base na URL
     const pathDecoded = decodeURIComponent(window.location.pathname).toLowerCase();
@@ -48,7 +49,8 @@ document.addEventListener("DOMContentLoaded", () => {
         recebimento: [],
         triagem: [],
         prensa: [],
-        bazar: []
+        bazar: [],
+        cooperados: []
     };
 
     let activeTab = "recebimento";
@@ -59,6 +61,7 @@ document.addEventListener("DOMContentLoaded", () => {
         triagem: document.getElementById("tab-triagem"),
         prensa: document.getElementById("tab-prensa"),
         bazar: document.getElementById("tab-bazar"),
+        cooperados: document.getElementById("tab-cooperados"),
         graficos: document.getElementById("tab-graficos")
     };
 
@@ -67,6 +70,7 @@ document.addEventListener("DOMContentLoaded", () => {
         triagem: document.getElementById("table-triagem-el"),
         prensa: document.getElementById("table-prensa-el"),
         bazar: document.getElementById("table-bazar-el"),
+        cooperados: document.getElementById("table-cooperados-el"),
         graficos: document.getElementById("container-graficos")
     };
 
@@ -149,6 +153,7 @@ document.addEventListener("DOMContentLoaded", () => {
             rawData.triagem = (data.triagem || []).filter(item => parseInt(item.cooperativa_id) === currentCoopId);
             rawData.prensa = (data.prensa || []).filter(item => parseInt(item.cooperativa_id) === currentCoopId);
             rawData.bazar = (data.bazar || []).filter(item => parseInt(item.cooperativa_id) === currentCoopId);
+            rawData.cooperados = (data.cooperados || []).filter(item => parseInt(item.cooperativa_id) === currentCoopId);
 
             // Renderiza as estatísticas e as tabelas
             renderStats();
@@ -219,7 +224,8 @@ document.addEventListener("DOMContentLoaded", () => {
             recebimento: filterDataset(rawData.recebimento),
             triagem: filterDataset(rawData.triagem),
             prensa: filterDataset(rawData.prensa),
-            bazar: filterDataset(rawData.bazar)
+            bazar: filterDataset(rawData.bazar),
+            cooperados: filterDataset(rawData.cooperados)
         };
 
         renderStats(filtered);
@@ -306,6 +312,37 @@ document.addEventListener("DOMContentLoaded", () => {
                         <td class="px-6 py-4 text-gray-500">${dataFormatada}</td>
                     </tr>
                 `;
+            } else if (activeTab === "cooperados") {
+                const isAtivo = item.ativo === true || item.ativo === "true";
+                const coopNome = currentCoop === "santa maria" ? "Santa Maria" : "Coopersel";
+                const statusBadge = isAtivo
+                    ? `<span class="px-2.5 py-1 bg-green-100 text-green-800 rounded-full text-xs font-bold inline-flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-green-600"></span>Ativo</span>`
+                    : `<span class="px-2.5 py-1 bg-red-100 text-red-800 rounded-full text-xs font-bold inline-flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-red-600"></span>Inativo</span>`;
+
+                rowHTML = `
+                    <tr class="hover:bg-gray-50 transition border-b border-gray-100">
+                        <td class="px-6 py-4"><span class="px-2 py-1 bg-blue-50 text-blue-800 rounded-full text-xs font-semibold">${coopNome}</span></td>
+                        <td class="px-6 py-4 font-bold text-gray-800">${item.nome || '-'}</td>
+                        <td class="px-6 py-4 font-mono text-xs text-gray-600">${item.cpf || '-'}</td>
+                        <td class="px-6 py-4 capitalize">${item.funcao || '-'}</td>
+                        <td class="px-6 py-4">${item.telefone || '-'}</td>
+                        <td class="px-6 py-4">${item.sexo || '-'}</td>
+                        <td class="px-6 py-4">${statusBadge}</td>
+                        <td class="px-6 py-4 text-center">
+                            <div class="flex items-center justify-center gap-1">
+                                <button onclick="window.abrirModalEditarCooperado('${item.cpf}', '${coopNome}')" title="Editar Cooperado" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition">
+                                    <span class="material-symbols-outlined text-lg">edit</span>
+                                </button>
+                                <button onclick="window.trocarStatusCooperado('${item.cpf}', '${coopNome}')" title="Alternar Status (Ativo/Inativo)" class="p-1.5 ${isAtivo ? 'text-amber-600 hover:bg-amber-50' : 'text-green-600 hover:bg-green-50'} rounded-lg transition">
+                                    <span class="material-symbols-outlined text-lg">${isAtivo ? 'block' : 'check_circle'}</span>
+                                </button>
+                                <button onclick="window.excluirCooperado('${item.cpf}', '${coopNome}')" title="Excluir Cooperado" class="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition">
+                                    <span class="material-symbols-outlined text-lg">delete</span>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
             }
 
             tbody.insertAdjacentHTML("beforeend", rowHTML);
@@ -340,7 +377,13 @@ document.addEventListener("DOMContentLoaded", () => {
                         (item.procedencia && item.procedencia.toLowerCase().includes(buscaTexto)) ||
                         (item.recebido_por && item.recebido_por.toLowerCase().includes(buscaTexto)) ||
                         (item.placa_caminhao && item.placa_caminhao.toLowerCase().includes(buscaTexto)) ||
-                        (item.motivo && item.motivo.toLowerCase().includes(buscaTexto));
+                        (item.motivo && item.motivo.toLowerCase().includes(buscaTexto)) ||
+                        (item.nome && item.nome.toLowerCase().includes(buscaTexto)) ||
+                        (item.cpf && String(item.cpf).includes(buscaTexto)) ||
+                        (item.funcao && item.funcao.toLowerCase().includes(buscaTexto)) ||
+                        (item.telefone && String(item.telefone).includes(buscaTexto)) ||
+                        (item.rg && String(item.rg).includes(buscaTexto)) ||
+                        (item.endereco && item.endereco.toLowerCase().includes(buscaTexto));
 
                     if (!matchesText) return false;
                 }
@@ -598,6 +641,162 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             });
         }
+
+        // --- CHART 6: Cooperados por Sexo (Rosca) ---
+        const sexoCanvas = document.getElementById("chart-cooperados-sexo");
+        if (sexoCanvas) {
+            if (chartSexoInstance) chartSexoInstance.destroy();
+            const contagem = {};
+            rawData.cooperados.forEach(c => {
+                const sexo = (c.sexo || "Não informado").trim();
+                contagem[sexo] = (contagem[sexo] || 0) + 1;
+            });
+
+            const sexoLabels = Object.keys(contagem);
+            const sexoData = Object.values(contagem);
+
+            const coresSexo = {
+                "Masculino": "#3b82f6",
+                "Feminino": "#ec4899",
+                "Outro": "#a855f7",
+                "Não informado": "#94a3b8"
+            };
+            const cores = sexoLabels.map(l => coresSexo[l] || "#64748b");
+
+            chartSexoInstance = new Chart(sexoCanvas, {
+                type: 'doughnut',
+                data: {
+                    labels: sexoLabels.length > 0 ? sexoLabels : ["Sem dados"],
+                    datasets: [{
+                        data: sexoData.length > 0 ? sexoData : [0],
+                        backgroundColor: sexoLabels.length > 0 ? cores : ["#e2e8f0"],
+                        borderWidth: 2,
+                        borderColor: "#fff"
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => {
+                                    const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                                    const pct = total > 0 ? ((ctx.parsed / total) * 100).toFixed(1) : 0;
+                                    return ` ${ctx.label}: ${ctx.parsed} (${pct}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+    // --- LÓGICA DE GERENCIAMENTO DE COOPERADOS (Status, Excluir, Editar) ---
+
+    window.trocarStatusCooperado = async function(cpf, cooperativa) {
+        if (!confirm(`Deseja alterar o status do cooperado (CPF: ${cpf})?`)) return;
+        try {
+            const res = await fetch("https://backendcooperativas.vercel.app/trocar_status_cooperado", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ cpf: String(cpf), cooperativa: cooperativa })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || data.details || "Erro ao alterar status.");
+            alert(data.message || "Status alterado com sucesso!");
+            fetchData();
+        } catch (err) {
+            alert("Erro: " + err.message);
+        }
+    };
+
+    window.excluirCooperado = async function(cpf, cooperativa) {
+        if (!confirm(`Tem certeza que deseja EXCLUIR o cooperado (CPF: ${cpf})? Esta ação não pode ser desfeita.`)) return;
+        try {
+            const res = await fetch("https://backendcooperativas.vercel.app/excluir_cooperado", {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ cpf: String(cpf), cooperativa: cooperativa })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || data.details || "Erro ao excluir cooperado.");
+            alert(data.message || "Cooperado excluído com sucesso!");
+            fetchData();
+        } catch (err) {
+            alert("Erro: " + err.message);
+        }
+    };
+
+    window.abrirModalEditarCooperado = function(cpf, cooperativa) {
+        const cooperado = rawData.cooperados.find(c => String(c.cpf) === String(cpf));
+        if (!cooperado) {
+            alert("Cooperado não encontrado.");
+            return;
+        }
+        document.getElementById("edit-cpf").value = cooperado.cpf || "";
+        document.getElementById("edit-cooperativa").value = cooperativa;
+        document.getElementById("edit-nome").value = cooperado.nome || "";
+        document.getElementById("edit-funcao").value = cooperado.funcao || "";
+        document.getElementById("edit-telefone").value = cooperado.telefone || "";
+        document.getElementById("edit-rg").value = cooperado.rg || "";
+        document.getElementById("edit-idade").value = cooperado.idade || "";
+        document.getElementById("edit-dt-nascimento").value = cooperado.data_de_nascimento || "";
+        document.getElementById("edit-sexo").value = cooperado.sexo || "Masculino";
+        document.getElementById("edit-endereco").value = cooperado.endereco || "";
+
+        const modal = document.getElementById("modal-editar-cooperado");
+        if (modal) modal.classList.remove("hidden");
+    };
+
+    const modalEditar = document.getElementById("modal-editar-cooperado");
+    const btnFecharModal = document.getElementById("btn-fechar-modal-editar");
+    const btnCancelarModal = document.getElementById("btn-cancelar-modal-editar");
+    const formEditar = document.getElementById("form-editar-cooperado");
+
+    function fecharModalEditar() {
+        if (modalEditar) modalEditar.classList.add("hidden");
+    }
+
+    if (btnFecharModal) btnFecharModal.addEventListener("click", fecharModalEditar);
+    if (btnCancelarModal) btnCancelarModal.addEventListener("click", fecharModalEditar);
+
+    if (formEditar) {
+        formEditar.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const cpf = document.getElementById("edit-cpf").value;
+            const cooperativa = document.getElementById("edit-cooperativa").value;
+
+            const payload = {
+                cpf: String(cpf),
+                cooperativa: cooperativa,
+                nome: document.getElementById("edit-nome").value.trim(),
+                funcao: document.getElementById("edit-funcao").value.trim(),
+                telefone: document.getElementById("edit-telefone").value.trim(),
+                rg: document.getElementById("edit-rg").value.trim(),
+                idade: parseInt(document.getElementById("edit-idade").value),
+                data_de_nascimento: document.getElementById("edit-dt-nascimento").value,
+                sexo: document.getElementById("edit-sexo").value,
+                endereco: document.getElementById("edit-endereco").value.trim()
+            };
+
+            try {
+                const res = await fetch("https://backendcooperativas.vercel.app/editar_cooperado", {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || data.details || "Erro ao editar cooperado.");
+                alert(data.message || "Cooperado editado com sucesso!");
+                fecharModalEditar();
+                fetchData();
+            } catch (err) {
+                alert("Erro: " + err.message);
+            }
+        });
     }
 
     // Iniciar
