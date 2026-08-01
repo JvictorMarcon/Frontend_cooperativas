@@ -270,6 +270,9 @@ document.addEventListener("DOMContentLoaded", () => {
                         <td class="px-6 py-4 capitalize">${item.material_tipo}</td>
                         <td class="px-6 py-4">${item.recebido_por}</td>
                         <td class="px-6 py-4 text-gray-500">${dataFormatada}</td>
+                        <td class="px-6 py-4 text-center">
+                            <button onclick="window.excluirRegistroGeral('excluir_recebimento', ${item.id}, '${coopNome.toLowerCase()}')" title="Excluir" class="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition"><span class="material-symbols-outlined text-lg">delete</span></button>
+                        </td>
                     </tr>
                 `;
             } else if (activeTab === "triagem") {
@@ -280,6 +283,9 @@ document.addEventListener("DOMContentLoaded", () => {
                         <td class="px-6 py-4 capitalize">${item.material_tipo}</td>
                         <td class="px-6 py-4 text-red-600 font-semibold">${parseFloat(item.peso_rejeito).toFixed(2)} Kg</td>
                         <td class="px-6 py-4 text-gray-500">${dataFormatada}</td>
+                        <td class="px-6 py-4 text-center">
+                            <button onclick="window.excluirRegistroGeral('excluir_triagem', ${item.id}, '${coopNome.toLowerCase()}')" title="Excluir" class="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition"><span class="material-symbols-outlined text-lg">delete</span></button>
+                        </td>
                     </tr>
                 `;
             } else if (activeTab === "prensa") {
@@ -290,6 +296,9 @@ document.addEventListener("DOMContentLoaded", () => {
                         <td class="px-6 py-4 font-semibold">${item.qtd_fardos_prensa} fardos</td>
                         <td class="px-6 py-4 text-green-700 font-semibold">${parseFloat(item.qnt_material_final).toFixed(2)} Kg</td>
                         <td class="px-6 py-4 text-gray-500">${dataFormatada}</td>
+                        <td class="px-6 py-4 text-center">
+                            <button onclick="window.excluirRegistroGeral('excluir_prensa', ${item.id}, '${coopNome.toLowerCase()}')" title="Excluir" class="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition"><span class="material-symbols-outlined text-lg">delete</span></button>
+                        </td>
                     </tr>
                 `;
             } else if (activeTab === "bazar") {
@@ -310,6 +319,9 @@ document.addEventListener("DOMContentLoaded", () => {
                         <td class="px-6 py-4">${metodoBadge}</td>
                         <td class="px-6 py-4">${item.motivo}</td>
                         <td class="px-6 py-4 text-gray-500">${dataFormatada}</td>
+                        <td class="px-6 py-4 text-center">
+                            <button onclick="window.excluirRegistroGeral('excluir_bazar', ${item.id}, '${coopNome.toLowerCase()}')" title="Excluir" class="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition"><span class="material-symbols-outlined text-lg">delete</span></button>
+                        </td>
                     </tr>
                 `;
             } else if (activeTab === "cooperados") {
@@ -732,6 +744,23 @@ document.addEventListener("DOMContentLoaded", () => {
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || data.details || "Erro ao excluir cooperado.");
             alert(data.message || "Cooperado excluído com sucesso!");
+            fetchData();
+        } catch (err) {
+            alert("Erro: " + err.message);
+        }
+    };
+
+    window.excluirRegistroGeral = async function(endpoint, id, cooperativa) {
+        if (!confirm(`Tem certeza que deseja EXCLUIR este registro? Esta ação não pode ser desfeita.`)) return;
+        try {
+            const res = await fetch(`https://backendcooperativas.vercel.app/${endpoint}`, {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id: id, cooperativa: cooperativa })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || data.details || "Erro ao excluir registro.");
+            alert(data.message || "Registro excluído com sucesso!");
             fetchData();
         } catch (err) {
             alert("Erro: " + err.message);
