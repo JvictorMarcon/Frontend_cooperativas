@@ -328,6 +328,17 @@ document.addEventListener("DOMContentLoaded", () => {
             if (e.target === this) this.classList.add("hidden");
         });
     });
+
+    // Event listeners para exportação Excel e PDF
+    const btnExportExcel = document.getElementById("btn-export-excel");
+    if (btnExportExcel) {
+        btnExportExcel.addEventListener("click", exportarExcel);
+    }
+
+    const btnExportPdf = document.getElementById("btn-export-pdf");
+    if (btnExportPdf) {
+        btnExportPdf.addEventListener("click", exportarPDF);
+    }
 });
 
 const formataMoeda = (valor) => {
@@ -431,15 +442,120 @@ function atualizarKPIs(data) {
     kpiMargem.className = `text-2xl font-bold mt-1 ${margem >= 0 ? "text-green-600" : "text-red-600"}`;
 }
 
+// ==============================
+//   Funções de Exportação
+// ==============================
+function getNomeCooperativaEEtiqueta() {
+    const selCoop = document.getElementById("selCooperativa");
+    let coopNome = "Cooperativa";
+    if (selCoop && !selCoop.parentElement.classList.contains("hidden")) {
+        coopNome = selCoop.options[selCoop.selectedIndex] ? selCoop.options[selCoop.selectedIndex].text : "Cooperativa";
+    } else {
+        const coopSessao = sessionStorage.getItem("cooperativa");
+        if (coopSessao) coopNome = coopSessao;
+    }
+    const mes = document.getElementById("selMes").value;
+    const ano = document.getElementById("selAno").value;
+    const tabMensal = document.getElementById("tabMensal");
+    const isMensal = tabMensal && tabMensal.classList.contains("text-blue-700");
+    const periodoLabel = isMensal ? `Mês ${mes}/${ano}` : `Acumulado ${ano}`;
+    const periodoSufixo = isMensal ? `mensal_${mes}_${ano}` : `acumulado_${ano}`;
+
+    return { coopNome, mes, ano, isMensal, periodoLabel, periodoSufixo };
+}
+
+function exportarExcel() {
+    const table = document.querySelector("#dreContainer table");
+    if (!table) {
+        alert("Não há dados visíveis para exportar.");
+        return;
+    }
+
+    if (typeof XLSX === "undefined") {
+        alert("Biblioteca Excel (SheetJS) não foi carregada.");
+        return;
+    }
+
+    const { coopNome, periodoSufixo } = getNomeCooperativaEEtiqueta();
+    const wb = XLSX.utils.table_to_book(table, { sheet: "DRE" });
+    const nomeLimpoCoop = coopNome.toLowerCase().replace(/[^a-z0-9]+/g, "_");
+    const filename = `DRE_${nomeLimpoCoop}_${periodoSufixo}.xlsx`;
+
+    XLSX.writeFile(wb, filename);
+}
+
+function exportarPDF() {
+    const table = document.querySelector("#dreContainer table");
+    if (!table) {
+        alert("Não há dados visíveis para exportar.");
+        return;
+    }
+
+    if (!window.jspdf || !window.jspdf.jsPDF) {
+        alert("Biblioteca PDF (jsPDF) não foi carregada.");
+        return;
+    }
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('p', 'mm', 'a4');
+    const { coopNome, periodoLabel, periodoSufixo } = getNomeCooperativaEEtiqueta();
+
+    // Cabeçalho do PDF
+    doc.setFont("Helvetica", "bold");
+    doc.setFontSize(16);
+    doc.setTextColor(29, 78, 216);
+    doc.text(`DRE - ${coopNome}`, 14, 15);
+
+    doc.setFont("Helvetica", "normal");
+    doc.setFontSize(10);
+    doc.setTextColor(107, 114, 128);
+    doc.text(`Período: ${periodoLabel} · Gerado em: ${new Date().toLocaleDateString("pt-BR")} ${new Date().toLocaleTimeString("pt-BR")}`, 14, 22);
+
+    doc.autoTable({
+        html: table,
+        startY: 28,
+        theme: 'grid',
+        headStyles: {
+            fillColor: [29, 78, 216],
+            textColor: [255, 255, 255],
+            fontSize: 9,
+            fontStyle: 'bold'
+        },
+        styles: {
+            fontSize: 8,
+            cellPadding: 3,
+            textColor: [51, 65, 85]
+        },
+        alternateRowStyles: {
+            fillColor: [248, 250, 252]
+        },
+        margin: { top: 28, left: 14, right: 14 }
+    });
+
+    const nomeLimpoCoop = coopNome.toLowerCase().replace(/[^a-z0-9]+/g, "_");
+    const filename = `DRE_${nomeLimpoCoop}_${periodoSufixo}.pdf`;
+    doc.save(filename);
+}
+
 function renderizarTabelaMensal(data) {
     const container = document.getElementById("dreContainer");
-    let html = `<table class="w-full text-left text-sm text-gray-700">`;
+    let html = `
+    <table class="w-full text-left text-sm text-gray-700">
+        <thead>
+            <tr class="bg-gray-100 text-gray-600 font-semibold text-xs uppercase border-b border-gray-200">
+                <th class="p-3 w-16">Cód CC</th>
+                <th class="p-3">Descrição / Histórico</th>
+                <th class="p-3 text-right">Valor (R$)</th>
+                <th class="p-3 text-center">% Receita</th>
+            </tr>
+        </thead>
+        <tbody>`;
 
     // Saldo Anterior
     html += `
-    <tr class="dre-group-header">
+    <tr class="dre-group-header bg-gray-50 border-b border-gray-200">
         <td class="p-4 font-bold text-gray-800" colspan="2">SALDO ANTERIOR</td>
-        <td class="p-4 font-bold text-right">${formataMoeda(data.saldo_anterior)}</td>
+        <td class="p-4 font-bold text-right text-gray-800">${formataMoeda(data.saldo_anterior)}</td>
         <td class="p-4 text-center">--</td>
     </tr>`;
 
@@ -451,7 +567,7 @@ function renderizarTabelaMensal(data) {
         if(!grupo) return;
 
         html += `
-        <tr class="dre-group-header">
+        <tr class="dre-group-header bg-gray-50 border-b border-gray-200">
             <td class="p-3 font-bold text-gray-800 uppercase" colspan="4">${grupo.nome}</td>
         </tr>`;
 
@@ -469,30 +585,30 @@ function renderizarTabelaMensal(data) {
 
         // Total do grupo
         html += `
-        <tr class="dre-total">
+        <tr class="dre-total bg-gray-50/70 border-b border-gray-200">
             <td class="p-3 font-semibold text-gray-700 pl-8" colspan="2">TOTAL ${grupo.nome}</td>
             <td class="p-3 text-right font-bold text-gray-800">${formataMoeda(grupo.total)}</td>
-            <td class="p-3 text-center font-bold">100%</td>
+            <td class="p-3 text-center font-bold text-gray-700">100%</td>
         </tr>`;
     });
 
     // Resultado Final
     html += `
-    <tr class="dre-total mt-4" style="background:#dbeafe; border-top: 2px solid #3b82f6;">
-        <td class="p-4 font-bold text-blue-800 uppercase text-lg" colspan="2">RESULTADO DO EXERCÍCIO (R-D)</td>
-        <td class="p-4 text-right font-bold text-blue-800 text-lg">${formataMoeda(data.resultado_mes)}</td>
+    <tr class="dre-total" style="background:#dbeafe; border-top: 2px solid #3b82f6;">
+        <td class="p-4 font-bold text-blue-800 uppercase text-base" colspan="2">RESULTADO DO EXERCÍCIO (R-D)</td>
+        <td class="p-4 text-right font-bold text-blue-800 text-base">${formataMoeda(data.resultado_mes)}</td>
         <td class="p-4 text-center font-bold text-blue-800">${formataPercentual(data.percentual_resultado)}</td>
     </tr>`;
 
     // Saldo Final
     html += `
-    <tr class="dre-total">
-        <td class="p-4 font-bold text-gray-800 uppercase text-lg" colspan="2">SALDO FINAL</td>
-        <td class="p-4 text-right font-bold text-gray-800 text-lg">${formataMoeda(data.saldo_final)}</td>
+    <tr class="dre-total border-b border-gray-200 bg-gray-50">
+        <td class="p-4 font-bold text-gray-800 uppercase text-base" colspan="2">SALDO FINAL</td>
+        <td class="p-4 text-right font-bold text-gray-800 text-base">${formataMoeda(data.saldo_final)}</td>
         <td class="p-4"></td>
     </tr>`;
 
-    html += `</table>`;
+    html += `</tbody></table>`;
     container.innerHTML = html;
 }
 
