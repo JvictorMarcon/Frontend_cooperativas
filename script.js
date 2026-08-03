@@ -76,7 +76,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     submitBtn.disabled = false;
                     submitBtn.innerHTML = originalBtnHTML;
                 }
-            } else if (["recepcao", "triagem", "prensa", "bazar"].includes(cargo)) {
+            } else if (["recepcao", "triagem", "prensa", "bazar", "catadores"].includes(cargo)) {
                 let folder = "";
                 if (cooperativa === "santa maria") {
                     folder = "Santa Maria";
@@ -89,11 +89,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     return;
                 }
 
-                // Redireciona para o arquivo respectivo
-                // recepcao -> recepcao.html
-                // triagem -> triagem.html
-                // prensa -> prensa.html
-                // bazar -> bazar.html
+                // Redireciona para o arquivo respectivo (ex: Coopersel/catadores.html)
                 window.location.href = `${folder}/${cargo}.html`;
             } else {
                 alert("Cargo não reconhecido no sistema.");

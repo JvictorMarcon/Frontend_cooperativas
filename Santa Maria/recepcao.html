@@ -42,26 +42,56 @@
                     <option value="mercado">Mercado</option>
                 </select>
             </div>
-            <div class="flex flex-col gap-1">
+            <!-- Campo Placa (visível por padrão, some quando mercado) -->
+            <div class="flex flex-col gap-1" id="div-placa">
                 <label for="placa_caminhao" class="font-merriweather font-semibold text-gray-700">Placa do
                     Caminhão:</label>
-                <select name="placa_caminhao" id="placa_caminhao" required
+                <select name="placa_caminhao" id="placa_caminhao"
                     class="border-2 border-gray-300 rounded-xl px-4 py-2 focus:border-blue-700 focus:outline-none transition duration-300">
                     <option value="">Selecione uma placa</option>
                     <option value="ABC-1234">ABC-1234</option>
                     <option value="DEF-5678">DEF-5678</option>
                 </select>
             </div>
-            <div class="flex flex-col gap-1">
-                <label for="tipo_de_material" class="font-merriweather font-semibold text-gray-700">Tipo de
-                    Material:</label>
-                <select name="tipo_de_material" id="tipo_de_material" required
+            <!-- Campo Nome do Mercado (oculto por padrão, aparece quando mercado) -->
+            <div class="flex flex-col gap-1 hidden" id="div-mercado">
+                <label for="nome_mercado" class="font-merriweather font-semibold text-gray-700">Nome do Mercado:</label>
+                <input type="text" id="nome_mercado" name="nome_mercado" placeholder="Ex: mercadão do bairro"
                     class="border-2 border-gray-300 rounded-xl px-4 py-2 focus:border-blue-700 focus:outline-none transition duration-300">
-                    <option value="">Selecione um tipo</option>
+            </div>
+            <div class="flex flex-col gap-1">
+                <label for="tipo_de_material" class="font-merriweather font-semibold text-gray-700">Tipo de Material (digite para buscar):</label>
+                <input list="lista-materiais" id="tipo_de_material" name="tipo_de_material" placeholder="Digite ou selecione o material..." required
+                    class="border-2 border-gray-300 rounded-xl px-4 py-2 focus:border-blue-700 focus:outline-none transition duration-300">
+                <datalist id="lista-materiais">
+                    <option value="alumínio">Alumínio</option>
+                    <option value="arquivo">Arquivo</option>
+                    <option value="bloco">Bloco</option>
+                    <option value="caixaria">Caixaria</option>
+                    <option value="cobre c/ capa">Cobre c/ Capa</option>
+                    <option value="cobre mel">Cobre Mel</option>
+                    <option value="cristal">Cristal</option>
+                    <option value="latinha">Latinha</option>
                     <option value="metal">Metal</option>
-                    <option value="plastico">Plástico</option>
-                    <option value="papel">Papel</option>
-                </select>
+                    <option value="motor de geladeira">Motor de Geladeira</option>
+                    <option value="motorzinho">Motorzinho</option>
+                    <option value="óleo">Óleo</option>
+                    <option value="panela">Panela</option>
+                    <option value="parachoque">Parachoque</option>
+                    <option value="pead">PEAD</option>
+                    <option value="pead colorido">PEAD Colorido</option>
+                    <option value="pp">PP</option>
+                    <option value="pp branco">PP Branco</option>
+                    <option value="pp preto">PP Preto</option>
+                    <option value="pvc">PVC</option>
+                    <option value="sacolinha">Sacolinha</option>
+                    <option value="sucata">Sucata</option>
+                    <option value="terceira">Terceira</option>
+                    <option value="papelão">Papelão</option>
+                    <option value="plástico misto">Plástico Misto</option>
+                    <option value="pet">PET</option>
+                    <option value="pet óleo">PET Óleo</option>
+                </datalist>
             </div>
             <div class="flex flex-col gap-1">
                 <label for="peso" class="font-merriweather font-semibold text-gray-700">Peso(Kg):</label>
@@ -79,6 +109,30 @@
             </button>
         </form>
     </main>
+
+    <script>
+        // Lógica de mostrar/esconder campos conforme procedência
+        const procedenciaSelect = document.getElementById('procedencia');
+        const divPlaca = document.getElementById('div-placa');
+        const divMercado = document.getElementById('div-mercado');
+        const placaSelect = document.getElementById('placa_caminhao');
+        const nomeInput = document.getElementById('nome_mercado');
+
+        procedenciaSelect.addEventListener('change', function () {
+            if (this.value === 'mercado') {
+                divPlaca.classList.add('hidden');
+                placaSelect.required = false;
+                divMercado.classList.remove('hidden');
+                nomeInput.required = true;
+            } else {
+                divPlaca.classList.remove('hidden');
+                placaSelect.required = true;
+                divMercado.classList.add('hidden');
+                nomeInput.required = false;
+                nomeInput.value = '';
+            }
+        });
+    </script>
 
     <script src="../js/recepcao.js"></script>
 </body>

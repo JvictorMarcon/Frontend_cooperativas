@@ -600,6 +600,15 @@ function renderizarTabelaMensal(data) {
         <td class="p-4 text-center font-bold text-blue-800">${formataPercentual(data.percentual_resultado)}</td>
     </tr>`;
 
+    // Partilha Cooperados (20% do resultado)
+    const partilha20 = (data.resultado_mes || 0) * 0.20;
+    html += `
+    <tr class="dre-total border-b border-gray-200" style="background:#f0fdf4;">
+        <td class="p-4 font-bold text-green-800 uppercase text-sm" colspan="2">PARTILHA COOPERADOS (20% do Resultado)</td>
+        <td class="p-4 text-right font-bold text-green-800 text-sm">${formataMoeda(partilha20)}</td>
+        <td class="p-4 text-center font-bold text-green-700">20%</td>
+    </tr>`;
+
     // Saldo Final
     html += `
     <tr class="dre-total border-b border-gray-200 bg-gray-50">

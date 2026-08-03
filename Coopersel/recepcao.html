@@ -33,41 +33,91 @@
     </header>
     <main class="bg-white w-full md:w-2/3 mx-auto mt-4 rounded-2xl shadow-lg border-b-4 border-blue-700 shadow-xl p-8">
         <form id="materiais-form" class="flex flex-col gap-5">
+            <!-- Cidade -->
+            <div class="flex flex-col gap-1">
+                <label for="cidade" class="font-merriweather font-semibold text-gray-700">Cidade:</label>
+                <select name="cidade" id="cidade" required
+                    class="border-2 border-gray-300 rounded-xl px-4 py-2 focus:border-blue-700 focus:outline-none transition duration-300">
+                    <option value="">Selecione a cidade</option>
+                    <option value="itapeva">Itapeva</option>
+                    <option value="nova campina">Nova Campina</option>
+                </select>
+            </div>
+            <!-- Procedência -->
             <div class="flex flex-col gap-1">
                 <label for="procedencia" class="font-merriweather font-semibold text-gray-700">Procedência:</label>
                 <select name="procedencia" id="procedencia" required
                     class="border-2 border-gray-300 rounded-xl px-4 py-2 focus:border-blue-700 focus:outline-none transition duration-300">
                     <option value="">Selecione a procedência</option>
                     <option value="coleta">Coleta</option>
-                    <option value="mercado">Mercado</option>
+                    <option value="doacao">Doação / PEV</option>
                 </select>
             </div>
-            <div class="flex flex-col gap-1">
+            <!-- Placa do Caminhão -->
+            <div class="flex flex-col gap-1" id="div-placa">
                 <label for="placa_caminhao" class="font-merriweather font-semibold text-gray-700">Placa do
                     Caminhão:</label>
-                <select name="placa_caminhao" id="placa_caminhao" required
+                <select name="placa_caminhao" id="placa_caminhao"
                     class="border-2 border-gray-300 rounded-xl px-4 py-2 focus:border-blue-700 focus:outline-none transition duration-300">
                     <option value="">Selecione uma placa</option>
                     <option value="ABC-1234">ABC-1234</option>
                     <option value="DEF-5678">DEF-5678</option>
                 </select>
             </div>
-            <div class="flex flex-col gap-1">
-                <label for="tipo_de_material" class="font-merriweather font-semibold text-gray-700">Tipo de
-                    Material:</label>
-                <select name="tipo_de_material" id="tipo_de_material" required
+            <!-- Origem da Doação / PEV (aparece quando procedência = doacao) -->
+            <div class="flex flex-col gap-1 hidden" id="div-doacao">
+                <label for="origem_doacao" class="font-merriweather font-semibold text-gray-700">Origem da Doação / PEV:</label>
+                <input type="text" id="origem_doacao" name="origem_doacao" placeholder="Ex: PEV Centro, Escola X, morador..."
                     class="border-2 border-gray-300 rounded-xl px-4 py-2 focus:border-blue-700 focus:outline-none transition duration-300">
-                    <option value="">Selecione um tipo</option>
-                    <option value="metal">Metal</option>
-                    <option value="plastico">Plástico</option>
-                    <option value="papel">Papel</option>
-                </select>
             </div>
+            <!-- Material -->
+            <div class="flex flex-col gap-1">
+                <label for="tipo_de_material" class="font-merriweather font-semibold text-gray-700">Tipo de Material (digite para buscar):</label>
+                <input list="lista-materiais" id="tipo_de_material" name="tipo_de_material" placeholder="Digite ou selecione o material..." required
+                    class="border-2 border-gray-300 rounded-xl px-4 py-2 focus:border-blue-700 focus:outline-none transition duration-300">
+                <datalist id="lista-materiais">
+                    <option value="alumínio">Alumínio</option>
+                    <option value="arquivo">Arquivo</option>
+                    <option value="bloco">Bloco</option>
+                    <option value="caixaria">Caixaria</option>
+                    <option value="cobre c/ capa">Cobre c/ Capa</option>
+                    <option value="cobre mel">Cobre Mel</option>
+                    <option value="cristal">Cristal</option>
+                    <option value="latinha">Latinha</option>
+                    <option value="metal">Metal</option>
+                    <option value="motor de geladeira">Motor de Geladeira</option>
+                    <option value="motorzinho">Motorzinho</option>
+                    <option value="óleo">Óleo</option>
+                    <option value="panela">Panela</option>
+                    <option value="parachoque">Parachoque</option>
+                    <option value="pead">PEAD</option>
+                    <option value="pead colorido">PEAD Colorido</option>
+                    <option value="pp">PP</option>
+                    <option value="pp branco">PP Branco</option>
+                    <option value="pp preto">PP Preto</option>
+                    <option value="pvc">PVC</option>
+                    <option value="sacolinha">Sacolinha</option>
+                    <option value="sucata">Sucata</option>
+                    <option value="terceira">Terceira</option>
+                    <option value="papelão">Papelão</option>
+                    <option value="plástico misto">Plástico Misto</option>
+                    <option value="pet">PET</option>
+                    <option value="pet óleo">PET Óleo</option>
+                </datalist>
+            </div>
+            <!-- Peso -->
             <div class="flex flex-col gap-1">
                 <label for="peso" class="font-merriweather font-semibold text-gray-700">Peso(Kg):</label>
                 <input type="number" id="peso" name="peso" step="0.01" required
                     class="border-2 border-gray-300 rounded-xl px-4 py-2 focus:border-blue-700 focus:outline-none transition duration-300">
             </div>
+            <!-- Rejeito (só aparece quando cidade = nova campina) -->
+            <div class="flex flex-col gap-1 hidden" id="div-rejeito">
+                <label for="peso_rejeito" class="font-merriweather font-semibold text-gray-700">Peso do Rejeito (Kg):</label>
+                <input type="number" id="peso_rejeito" name="peso_rejeito" step="0.01" placeholder="0.00"
+                    class="border-2 border-gray-300 rounded-xl px-4 py-2 focus:border-blue-700 focus:outline-none transition duration-300">
+            </div>
+            <!-- Recebedor -->
             <div class="flex flex-col gap-1">
                 <label for="recebedor" class="font-merriweather font-semibold text-gray-700">Recebedor:</label>
                 <input type="text" id="recebedor" name="recebedor" required
@@ -79,6 +129,47 @@
             </button>
         </form>
     </main>
+
+    <script>
+        // Lógica: cidade nova campina => mostrar rejeito
+        const cidadeSelect = document.getElementById('cidade');
+        const divRejeito = document.getElementById('div-rejeito');
+        const rejeitoInput = document.getElementById('peso_rejeito');
+
+        cidadeSelect.addEventListener('change', function () {
+            if (this.value === 'nova campina') {
+                divRejeito.classList.remove('hidden');
+                rejeitoInput.required = true;
+            } else {
+                divRejeito.classList.add('hidden');
+                rejeitoInput.required = false;
+                rejeitoInput.value = '';
+            }
+        });
+
+        // Lógica: procedência doacao => esconder placa, mostrar origem doação
+        const procedenciaSelect = document.getElementById('procedencia');
+        const divPlaca = document.getElementById('div-placa');
+        const placaSelect = document.getElementById('placa_caminhao');
+        const divDoacao = document.getElementById('div-doacao');
+        const origemInput = document.getElementById('origem_doacao');
+
+        procedenciaSelect.addEventListener('change', function () {
+            if (this.value === 'doacao') {
+                divPlaca.classList.add('hidden');
+                placaSelect.required = false;
+                placaSelect.value = '';
+                divDoacao.classList.remove('hidden');
+                origemInput.required = true;
+            } else {
+                divPlaca.classList.remove('hidden');
+                placaSelect.required = true;
+                divDoacao.classList.add('hidden');
+                origemInput.required = false;
+                origemInput.value = '';
+            }
+        });
+    </script>
 
     <script src="../js/recepcao.js"></script>
 </body>

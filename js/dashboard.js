@@ -265,19 +265,82 @@ document.addEventListener("DOMContentLoaded", () => {
             const dataFormatada = formatarData(item.data_do_recebimento || item.data_recebimento || item.data_triagem || item.data_prensa || item.bazar_data || item.data_criacao || item.data_bazar);
 
             if (activeTab === "recebimento") {
-                rowHTML = `
-                    <tr class="hover:bg-gray-50 transition border-b border-gray-100">
-                        <td class="px-6 py-4 capitalize">${item.procedencia}</td>
-                        <td class="px-6 py-4">${item.placa_caminhao}</td>
-                        <td class="px-6 py-4 font-semibold">${parseFloat(item.peso_total).toFixed(2)} Kg</td>
-                        <td class="px-6 py-4 capitalize">${item.material_tipo}</td>
-                        <td class="px-6 py-4">${item.recebido_por}</td>
-                        <td class="px-6 py-4 text-gray-500">${dataFormatada}</td>
-                        <td class="px-6 py-4 text-center">
-                            <button onclick="window.excluirRegistroGeral('excluir_recebimento', ${item.id})" title="Excluir" class="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition"><span class="material-symbols-outlined text-lg">delete</span></button>
-                        </td>
-                    </tr>
-                `;
+                if (isSantaMaria) {
+                    const origemLabel = item.procedencia === "mercado" && item.nome_mercado 
+                        ? item.nome_mercado 
+                        : (item.placa_caminhao || "-");
+
+                    rowHTML = `
+                        <tr class="hover:bg-gray-50 transition border-b border-gray-100">
+                            <td class="px-6 py-4 capitalize font-semibold">${item.procedencia}</td>
+                            <td class="px-6 py-4">${origemLabel}</td>
+                            <td class="px-6 py-4 font-semibold">${parseFloat(item.peso_total).toFixed(2)} Kg</td>
+                            <td class="px-6 py-4 capitalize">${item.material_tipo}</td>
+                            <td class="px-6 py-4">${item.recebido_por}</td>
+                            <td class="px-6 py-4 text-gray-500">${dataFormatada}</td>
+                            <td class="px-6 py-4 text-center">
+                                <button onclick="window.excluirRegistroGeral('excluir_recebimento', ${item.id})" title="Excluir" class="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition"><span class="material-symbols-outlined text-lg">delete</span></button>
+                            </td>
+                        </tr>
+                    `;
+                } else {
+                    // Coopersel (Regina)
+                    const filtroCidadeEl = document.getElementById("filtro-cidade");
+                    const isNovaCampina = filtroCidadeEl && filtroCidadeEl.value === "nova campina";
+                    
+                    const thRejeito = document.getElementById("th-rejeito");
+                    if (thRejeito) {
+                        if (isNovaCampina) thRejeito.classList.remove("hidden");
+                        else thRejeito.classList.add("hidden");
+                    }
+
+                    const thPagarCatador = document.getElementById("th-pagar-catador");
+                    if (thPagarCatador) {
+                        if (isNovaCampina) thPagarCatador.classList.add("hidden");
+                        else thPagarCatador.classList.remove("hidden");
+                    }
+
+                    const cidadeNome = (item.cidade || "itapeva").split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+                    
+                    let tipoBadge = `<span class="px-2 py-1 bg-blue-50 text-blue-800 rounded-full text-xs font-semibold">Caminhão</span>`;
+                    if (item.procedencia === "doacao") {
+                        tipoBadge = `<span class="px-2 py-1 bg-purple-50 text-purple-800 rounded-full text-xs font-semibold">Doação / PEV</span>`;
+                    } else if (item.procedencia === "catador") {
+                        tipoBadge = `<span class="px-2 py-1 bg-green-50 text-green-800 rounded-full text-xs font-semibold">Catador</span>`;
+                    }
+
+                    let origemInfo = item.placa_caminhao || "-";
+                    if (item.procedencia === "catador" && item.nome_catador) {
+                        origemInfo = `<span class="font-semibold text-gray-800">${item.nome_catador}</span>`;
+                    } else if ((item.procedencia === "mercado" || item.procedencia === "doacao") && item.nome_mercado) {
+                        origemInfo = `<span class="capitalize">${item.nome_mercado}</span>`;
+                    }
+
+                    const rejeitoText = parseFloat(item.peso_rejeito || 0) > 0 
+                        ? `<span class="text-red-600 font-semibold">${parseFloat(item.peso_rejeito).toFixed(2)} Kg</span>` 
+                        : `<span class="text-gray-400">-</span>`;
+
+                    const valorPagoText = item.procedencia === "catador" && item.valor_pago !== undefined && item.valor_pago !== null
+                        ? `<span class="text-green-700 font-bold bg-green-50 px-2 py-1 rounded-lg">R$ ${parseFloat(item.valor_pago).toFixed(2)}</span>`
+                        : `<span class="text-gray-400">-</span>`;
+
+                    rowHTML = `
+                        <tr class="hover:bg-gray-50 transition border-b border-gray-100">
+                            <td class="px-4 py-4 font-medium text-gray-700">${cidadeNome}</td>
+                            <td class="px-4 py-4">${tipoBadge}</td>
+                            <td class="px-4 py-4">${origemInfo}</td>
+                            <td class="px-4 py-4 font-semibold">${parseFloat(item.peso_total).toFixed(2)} Kg</td>
+                            ${isNovaCampina ? `<td class="px-4 py-4">${rejeitoText}</td>` : ''}
+                            ${!isNovaCampina ? `<td class="px-4 py-4">${valorPagoText}</td>` : ''}
+                            <td class="px-4 py-4 capitalize">${item.material_tipo}</td>
+                            <td class="px-4 py-4">${item.recebido_por}</td>
+                            <td class="px-4 py-4 text-gray-500 text-xs">${dataFormatada}</td>
+                            <td class="px-4 py-4 text-center">
+                                <button onclick="window.excluirRegistroGeral('excluir_recebimento', ${item.id})" title="Excluir" class="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition"><span class="material-symbols-outlined text-lg">delete</span></button>
+                            </td>
+                        </tr>
+                    `;
+                }
             } else if (activeTab === "triagem") {
                 rowHTML = `
                     <tr class="hover:bg-gray-50 transition border-b border-gray-100">
@@ -382,6 +445,24 @@ document.addEventListener("DOMContentLoaded", () => {
                     }
                 }
 
+                // Filtro de Cidade (Coopersel)
+                const filtroCidadeEl = document.getElementById("filtro-cidade");
+                if (filtroCidadeEl && filtroCidadeEl.value) {
+                    const itemCidade = (item.cidade || "itapeva").toLowerCase();
+                    if (itemCidade !== filtroCidadeEl.value.toLowerCase()) {
+                        return false;
+                    }
+                }
+
+                // Filtro de Procedência / Tipo
+                const filtroProcedenciaEl = document.getElementById("filtro-procedencia");
+                if (filtroProcedenciaEl && filtroProcedenciaEl.value && filtroProcedenciaEl.value !== "todos") {
+                    const itemProc = (item.procedencia || "").toLowerCase();
+                    if (itemProc !== filtroProcedenciaEl.value.toLowerCase()) {
+                        return false;
+                    }
+                }
+
                 // Filtro de Texto
                 if (buscaTexto) {
                     const matchesText = 
@@ -389,6 +470,9 @@ document.addEventListener("DOMContentLoaded", () => {
                         (item.procedencia && item.procedencia.toLowerCase().includes(buscaTexto)) ||
                         (item.recebido_por && item.recebido_por.toLowerCase().includes(buscaTexto)) ||
                         (item.placa_caminhao && item.placa_caminhao.toLowerCase().includes(buscaTexto)) ||
+                        (item.nome_mercado && item.nome_mercado.toLowerCase().includes(buscaTexto)) ||
+                        (item.nome_catador && item.nome_catador.toLowerCase().includes(buscaTexto)) ||
+                        (item.cidade && item.cidade.toLowerCase().includes(buscaTexto)) ||
                         (item.motivo && item.motivo.toLowerCase().includes(buscaTexto)) ||
                         (item.nome && item.nome.toLowerCase().includes(buscaTexto)) ||
                         (item.cpf && String(item.cpf).includes(buscaTexto)) ||
@@ -409,6 +493,13 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("filtro-data-inicio").addEventListener("input", renderData);
     document.getElementById("filtro-data-fim").addEventListener("input", renderData);
     document.getElementById("busca-texto").addEventListener("input", renderData);
+
+    const fcidade = document.getElementById("filtro-cidade");
+    if (fcidade) fcidade.addEventListener("change", renderData);
+
+    const fprocedencia = document.getElementById("filtro-procedencia");
+    if (fprocedencia) fprocedencia.addEventListener("change", renderData);
+
 
     // 9. Exportações
 
