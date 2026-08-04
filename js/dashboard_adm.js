@@ -335,16 +335,22 @@ document.addEventListener("DOMContentLoaded", () => {
                     ? `<span class="px-2.5 py-1 bg-green-100 text-green-800 rounded-full text-xs font-bold inline-flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-green-600"></span>Ativo</span>`
                     : `<span class="px-2.5 py-1 bg-red-100 text-red-800 rounded-full text-xs font-bold inline-flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-red-600"></span>Inativo</span>`;
 
+                const dtNasc = item.data_de_nascimento ? item.data_de_nascimento.split("-").reverse().join("/") : '-';
+
                 rowHTML = `
-                    <tr class="hover:bg-gray-50 transition border-b border-gray-100">
-                        <td class="px-6 py-4"><span class="px-2 py-1 bg-blue-50 text-blue-800 rounded-full text-xs font-semibold">${coopNome}</span></td>
-                        <td class="px-6 py-4 font-bold text-gray-800">${item.nome || '-'}</td>
-                        <td class="px-6 py-4 font-mono text-xs text-gray-600">${item.cpf || '-'}</td>
-                        <td class="px-6 py-4 capitalize">${item.funcao || '-'}</td>
-                        <td class="px-6 py-4">${item.telefone || '-'}</td>
-                        <td class="px-6 py-4">${item.sexo || '-'}</td>
-                        <td class="px-6 py-4">${statusBadge}</td>
-                        <td class="px-6 py-4 text-center">
+                    <tr class="hover:bg-gray-50 transition border-b border-gray-100 text-xs">
+                        <td class="px-4 py-3"><span class="px-2 py-1 bg-blue-50 text-blue-800 rounded-full text-xs font-semibold">${coopNome}</span></td>
+                        <td class="px-4 py-3 font-bold text-gray-800">${item.nome || '-'}</td>
+                        <td class="px-4 py-3 font-mono text-gray-600">${item.cpf || '-'}</td>
+                        <td class="px-4 py-3 capitalize">${item.funcao || '-'}</td>
+                        <td class="px-4 py-3">${item.telefone || '-'}</td>
+                        <td class="px-4 py-3 font-mono text-gray-600">${item.rg || '-'}</td>
+                        <td class="px-4 py-3">${item.idade ? item.idade + ' anos' : '-'}</td>
+                        <td class="px-4 py-3 text-gray-600">${dtNasc}</td>
+                        <td class="px-4 py-3">${item.sexo || '-'}</td>
+                        <td class="px-4 py-3 max-w-[140px] truncate" title="${item.endereco || ''}">${item.endereco || '-'}</td>
+                        <td class="px-4 py-3">${statusBadge}</td>
+                        <td class="px-4 py-3 text-center">
                             <div class="flex items-center justify-center gap-1">
                                 <button onclick="window.abrirModalEditarCooperado('${item.cpf}', '${coopNome}')" title="Editar Cooperado" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition">
                                     <span class="material-symbols-outlined text-lg">edit</span>
@@ -458,6 +464,28 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("filtro-data-fim").addEventListener("input", renderData);
     document.getElementById("busca-texto").addEventListener("input", renderData);
 
+    // Helper para remover a coluna de Ações na exportação
+    function getTableWithoutAcoes(table) {
+        const tableClone = table.cloneNode(true);
+        const ths = Array.from(tableClone.querySelectorAll("thead th"));
+        const acoesIndex = ths.findIndex(th => th.textContent.trim().toLowerCase().includes("ações"));
+
+        if (acoesIndex !== -1) {
+            ths[acoesIndex].remove();
+            tableClone.querySelectorAll("tbody tr").forEach(row => {
+                if (row.children[acoesIndex]) {
+                    row.children[acoesIndex].remove();
+                }
+            });
+            tableClone.querySelectorAll("tfoot tr").forEach(row => {
+                if (row.children[acoesIndex]) {
+                    row.children[acoesIndex].remove();
+                }
+            });
+        }
+        return tableClone;
+    }
+
     // 8. Lógicas de Exportação
 
     // Excel Export via SheetJS (XLSX)
@@ -470,7 +498,8 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        const wb = XLSX.utils.table_to_book(table, { sheet: activeTab });
+        const tableClean = getTableWithoutAcoes(table);
+        const wb = XLSX.utils.table_to_book(tableClean, { sheet: activeTab });
         XLSX.writeFile(wb, `relatorio_${activeTab}_itapeva_recicla.xlsx`);
     });
 
@@ -484,6 +513,7 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
+        const tableClean = getTableWithoutAcoes(table);
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF('l', 'mm', 'a4'); // Paisagem para caber mais colunas
 
@@ -500,7 +530,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Gerar tabela automaticamente a partir do elemento HTML
         doc.autoTable({
-            html: `#${activeTableId}`,
+            html: tableClean,
             startY: 28,
             theme: 'striped',
             headStyles: {
