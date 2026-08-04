@@ -176,6 +176,9 @@
                     <button class="tab-btn px-4 py-2 font-semibold text-sm border-b-2 border-transparent text-gray-500 hover:text-blue-700 transition" id="tab-graficos">
                         Gráficos
                     </button>
+                    <button class="tab-btn px-4 py-2 font-semibold text-sm border-b-2 border-transparent text-gray-500 hover:text-blue-700 transition" id="tab-vendas">
+                        Vendas
+                    </button>
                 </div>
                 
                 <!-- Exports buttons -->
@@ -347,6 +350,28 @@
                     <span class="material-symbols-outlined text-4xl">database_off</span>
                     <p class="text-sm mt-2">Nenhum registro encontrado para os filtros aplicados.</p>
                 </div>
+
+                <!-- Vendas Table -->
+                <table class="min-w-full divide-y divide-gray-200 text-sm hidden" id="table-vendas-el">
+                    <thead>
+                        <tr class="bg-gray-50 text-gray-500 uppercase tracking-wider text-xs font-semibold">
+                            <th class="px-6 py-3 text-left">Cooperativa</th>
+                            <th class="px-6 py-3 text-left">Data</th>
+                            <th class="px-6 py-3 text-left">NF-e</th>
+                            <th class="px-6 py-3 text-left">Comprador / Razão Social</th>
+                            <th class="px-6 py-3 text-left">Material</th>
+                            <th class="px-6 py-3 text-left">Qtd. (Kg)</th>
+                            <th class="px-6 py-3 text-left">Total (R$)</th>
+                            <th class="px-6 py-3 text-center">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 text-gray-700 bg-white" id="tbody-vendas">
+                        <!-- Filled by JS -->
+                    </tbody>
+                    <tfoot id="tfoot-vendas">
+                        <!-- Filled by JS -->
+                    </tfoot>
+                </table>
             </div>
         </div>
     </main>

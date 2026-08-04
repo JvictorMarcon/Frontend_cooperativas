@@ -64,6 +64,11 @@
                     <span class="material-symbols-outlined text-lg">person_add</span>
                     <span class="hidden sm:inline">Cadastrar Cooperado</span>
                 </a>
+                <button id="btn-abrir-cadastrar-venda"
+                    class="bg-amber-600 hover:bg-amber-500 hover:scale-105 transition duration-300 ease-in-out text-white font-bold px-3 py-2 sm:px-4 sm:py-2 rounded-xl flex items-center gap-2 text-sm shadow-sm">
+                    <span class="material-symbols-outlined text-lg">point_of_sale</span>
+                    <span class="hidden sm:inline">Cadastrar Venda</span>
+                </button>
                 <a href="../dre.html" class="bg-indigo-700 hover:bg-indigo-600 hover:scale-105 transition duration-300 ease-in-out text-white font-bold px-3 py-2 sm:px-4 sm:py-2 rounded-xl flex items-center gap-2 text-sm shadow-sm">
                     <span class="material-symbols-outlined text-lg">finance</span>
                     <span class="hidden sm:inline">Acessar DRE</span>
@@ -187,6 +192,9 @@
                     </button>
                     <button class="tab-btn px-4 py-2 font-semibold text-sm border-b-2 border-transparent text-gray-500 hover:text-blue-700 transition" id="tab-graficos">
                         Gráficos
+                    </button>
+                    <button class="tab-btn px-4 py-2 font-semibold text-sm border-b-2 border-transparent text-gray-500 hover:text-blue-700 transition" id="tab-vendas">
+                        Vendas
                     </button>
                 </div>
                 
@@ -358,6 +366,27 @@
                     <span class="material-symbols-outlined text-4xl">database_off</span>
                     <p class="text-sm mt-2">Nenhum registro encontrado para os filtros aplicados.</p>
                 </div>
+
+                <!-- Vendas Table -->
+                <table class="min-w-full divide-y divide-gray-200 text-sm hidden" id="table-vendas-el">
+                    <thead>
+                        <tr class="bg-gray-50 text-gray-500 uppercase tracking-wider text-xs font-semibold">
+                            <th class="px-6 py-3 text-left">Data</th>
+                            <th class="px-6 py-3 text-left">NF-e</th>
+                            <th class="px-6 py-3 text-left">Comprador / Razão Social</th>
+                            <th class="px-6 py-3 text-left">Material</th>
+                            <th class="px-6 py-3 text-left">Qtd. (Kg)</th>
+                            <th class="px-6 py-3 text-left">Total (R$)</th>
+                            <th class="px-6 py-3 text-center">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 text-gray-700 bg-white" id="tbody-vendas">
+                        <!-- Filled by JS -->
+                    </tbody>
+                    <tfoot id="tfoot-vendas">
+                        <!-- Filled by JS -->
+                    </tfoot>
+                </table>
             </div>
         </div>
     </main>
@@ -424,9 +453,59 @@
         </div>
     </div>
 
+    <!-- Modal Cadastrar Venda -->
+    <div id="modal-cadastrar-venda" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl shadow-xl border border-gray-200 max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center pb-4 border-b border-gray-200 mb-4">
+                <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-amber-600">point_of_sale</span>
+                    Cadastrar Venda
+                </h3>
+                <button type="button" id="btn-fechar-modal-venda" class="text-gray-400 hover:text-gray-600">
+                    <span class="material-symbols-outlined text-xl">close</span>
+                </button>
+            </div>
+            <form id="form-cadastrar-venda" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">NF-e</label>
+                    <input type="number" id="venda-nfe" required
+                        class="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:border-blue-700 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Material</label>
+                    <input type="text" id="venda-material" required
+                        class="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:border-blue-700 focus:outline-none">
+                </div>
+                <div class="sm:col-span-2">
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Comprador / Razão Social</label>
+                    <input type="text" id="venda-comprador" required
+                        class="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:border-blue-700 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Quantidade (Kg)</label>
+                    <input type="number" step="0.01" id="venda-quantidade-kg" required
+                        class="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:border-blue-700 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Total (R$)</label>
+                    <input type="number" step="0.01" id="venda-total" required
+                        class="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:border-blue-700 focus:outline-none">
+                </div>
+                <div class="sm:col-span-2 flex justify-end gap-3 mt-4 pt-4 border-t border-gray-200">
+                    <button type="button" id="btn-cancelar-modal-venda"
+                        class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold px-4 py-2 rounded-xl text-sm transition">Cancelar</button>
+                    <button type="submit"
+                        class="bg-amber-600 hover:bg-amber-500 text-white font-bold px-4 py-2 rounded-xl text-sm transition flex items-center gap-1">
+                        <span class="material-symbols-outlined text-sm">save</span> Salvar Venda
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Footer -->
     <footer class="bg-white border-t border-gray-200 py-4 text-center text-xs text-gray-400">
-        <span>&copy; 2026 Itapeva Recicla · Gestão de Cooperativas</span>
+        <span>&copy; 2026 Itapeva Recicla &middot; Gestão de Cooperativas</span>
     </footer>
 
     <!-- Script principal separado -->

@@ -50,7 +50,8 @@ document.addEventListener("DOMContentLoaded", () => {
         triagem: [],
         prensa: [],
         bazar: [],
-        cooperados: []
+        cooperados: [],
+        vendas: []
     };
 
     let activeTab = "recebimento";
@@ -62,6 +63,7 @@ document.addEventListener("DOMContentLoaded", () => {
         prensa: document.getElementById("tab-prensa"),
         bazar: document.getElementById("tab-bazar"),
         cooperados: document.getElementById("tab-cooperados"),
+        vendas: document.getElementById("tab-vendas"),
         graficos: document.getElementById("tab-graficos")
     };
 
@@ -71,6 +73,7 @@ document.addEventListener("DOMContentLoaded", () => {
         prensa: document.getElementById("table-prensa-el"),
         bazar: document.getElementById("table-bazar-el"),
         cooperados: document.getElementById("table-cooperados-el"),
+        vendas: document.getElementById("table-vendas-el"),
         graficos: document.getElementById("container-graficos")
     };
 
@@ -154,6 +157,7 @@ document.addEventListener("DOMContentLoaded", () => {
             rawData.prensa = (data.prensa || []).filter(item => parseInt(item.cooperativa_id) === currentCoopId);
             rawData.bazar = (data.bazar || []).filter(item => parseInt(item.cooperativa_id) === currentCoopId);
             rawData.cooperados = (data.cooperados || []).filter(item => parseInt(item.cooperativa_id) === currentCoopId);
+            rawData.vendas = (data.vendas || []).filter(item => parseInt(item.cooperativa_id) === currentCoopId);
 
             // Renderiza as estatísticas e as tabelas
             renderStats();
@@ -225,7 +229,8 @@ document.addEventListener("DOMContentLoaded", () => {
             triagem: filterDataset(rawData.triagem),
             prensa: filterDataset(rawData.prensa),
             bazar: filterDataset(rawData.bazar),
-            cooperados: filterDataset(rawData.cooperados)
+            cooperados: filterDataset(rawData.cooperados),
+            vendas: filterDataset(rawData.vendas)
         };
 
         renderStats(filtered);
@@ -418,16 +423,45 @@ document.addEventListener("DOMContentLoaded", () => {
                         </td>
                     </tr>
                 `;
+            } else if (activeTab === "vendas") {
+                const dataFormatadaVenda = formatarData(item.created_at);
+                rowHTML = `
+                    <tr class="hover:bg-gray-50 transition border-b border-gray-100">
+                        <td class="px-6 py-4 text-gray-500">${dataFormatadaVenda}</td>
+                        <td class="px-6 py-4 font-mono text-xs">${item.nfe || '-'}</td>
+                        <td class="px-6 py-4 font-semibold text-gray-800">${item["comprador/razao_social"] || '-'}</td>
+                        <td class="px-6 py-4 capitalize">${item.material || '-'}</td>
+                        <td class="px-6 py-4 font-semibold text-blue-700">${parseFloat(item.quantidade_kg).toFixed(2)} Kg</td>
+                        <td class="px-6 py-4 font-bold text-green-700">R$ ${parseFloat(item.total).toFixed(2)}</td>
+                        <td class="px-6 py-4 text-center">
+                            <button onclick="window.excluirRegistroGeral('excluir_venda', ${item.id})" title="Excluir" class="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition"><span class="material-symbols-outlined text-lg">delete</span></button>
+                        </td>
+                    </tr>
+                `;
             }
 
             tbody.insertAdjacentHTML("beforeend", rowHTML);
         });
 
-        // Sub-função de filtragem
+        // Totalizadores de Vendas no tfoot
+        if (activeTab === "vendas") {
+            const totalKg = activeList.reduce((sum, item) => sum + (parseFloat(item.quantidade_kg) || 0), 0);
+            const totalReais = activeList.reduce((sum, item) => sum + (parseFloat(item.total) || 0), 0);
+            const tfootEl = document.getElementById("tfoot-vendas");
+            if (tfootEl) {
+                tfootEl.innerHTML = `
+                    <tr class="bg-gray-50 font-bold text-gray-700 border-t-2 border-gray-300">
+                        <td class="px-6 py-3" colspan="4">Totais (${activeList.length} registros)</td>
+                        <td class="px-6 py-3 text-blue-700">${totalKg.toFixed(2)} Kg</td>
+                        <td class="px-6 py-3 text-green-700">R$ ${totalReais.toFixed(2)}</td>
+                    </tr>
+                `;
+            }
+        }
         function filterDataset(dataset) {
             return dataset.filter(item => {
                 // Filtro de Data
-                const dataCriacaoStr = item.data_do_recebimento || item.data_recebimento || item.data_triagem || item.data_prensa || item.bazar_data || item.data_criacao || item.data_bazar;
+                const dataCriacaoStr = item.data_do_recebimento || item.data_recebimento || item.data_triagem || item.data_prensa || item.bazar_data || item.data_criacao || item.data_bazar || item.created_at;
                 if (dataCriacaoStr) {
                     const itemData = new Date(dataCriacaoStr.split(" ")[0] || dataCriacaoStr);
                     
@@ -479,7 +513,10 @@ document.addEventListener("DOMContentLoaded", () => {
                         (item.funcao && item.funcao.toLowerCase().includes(buscaTexto)) ||
                         (item.telefone && String(item.telefone).includes(buscaTexto)) ||
                         (item.rg && String(item.rg).includes(buscaTexto)) ||
-                        (item.endereco && item.endereco.toLowerCase().includes(buscaTexto));
+                        (item.endereco && item.endereco.toLowerCase().includes(buscaTexto)) ||
+                        (item.material && item.material.toLowerCase().includes(buscaTexto)) ||
+                        (item["comprador/razao_social"] && item["comprador/razao_social"].toLowerCase().includes(buscaTexto)) ||
+                        (item.nfe && String(item.nfe).includes(buscaTexto));
 
                     if (!matchesText) return false;
                 }
@@ -912,6 +949,57 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (!res.ok) throw new Error(data.error || data.details || "Erro ao editar cooperado.");
                 alert(data.message || "Cooperado editado com sucesso!");
                 fecharModalEditar();
+                fetchData();
+            } catch (err) {
+                alert("Erro: " + err.message);
+            }
+        });
+    }
+
+    // --- MODAL CADASTRAR VENDA ---
+    const btnAbrirVenda = document.getElementById("btn-abrir-cadastrar-venda");
+    const modalVenda = document.getElementById("modal-cadastrar-venda");
+    const btnFecharVenda = document.getElementById("btn-fechar-modal-venda");
+    const btnCancelarVenda = document.getElementById("btn-cancelar-modal-venda");
+    const formVenda = document.getElementById("form-cadastrar-venda");
+
+    if (btnAbrirVenda) {
+        btnAbrirVenda.addEventListener("click", () => {
+            if (modalVenda) modalVenda.classList.remove("hidden");
+        });
+    }
+
+    function fecharModalVenda() {
+        if (modalVenda) modalVenda.classList.add("hidden");
+        if (formVenda) formVenda.reset();
+    }
+
+    if (btnFecharVenda) btnFecharVenda.addEventListener("click", fecharModalVenda);
+    if (btnCancelarVenda) btnCancelarVenda.addEventListener("click", fecharModalVenda);
+
+    if (formVenda) {
+        formVenda.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const payload = {
+                cooperativa: currentCoop,
+                nfe: parseInt(document.getElementById("venda-nfe").value),
+                comprador_razao_social: document.getElementById("venda-comprador").value.trim(),
+                material: document.getElementById("venda-material").value.trim(),
+                quantidade_kg: parseFloat(document.getElementById("venda-quantidade-kg").value),
+                total: parseFloat(document.getElementById("venda-total").value)
+            };
+
+            try {
+                const res = await fetch("https://backendcooperativas.vercel.app/vendas", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || data.message || "Erro ao cadastrar venda.");
+                alert(data.message || "Venda cadastrada com sucesso!");
+                fecharModalVenda();
                 fetchData();
             } catch (err) {
                 alert("Erro: " + err.message);

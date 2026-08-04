@@ -35,7 +35,8 @@ document.addEventListener("DOMContentLoaded", () => {
         triagem: [],
         prensa: [],
         bazar: [],
-        cooperados: []
+        cooperados: [],
+        vendas: []
     };
 
     let activeTab = "recebimento";
@@ -47,6 +48,7 @@ document.addEventListener("DOMContentLoaded", () => {
         prensa: document.getElementById("tab-prensa"),
         bazar: document.getElementById("tab-bazar"),
         cooperados: document.getElementById("tab-cooperados"),
+        vendas: document.getElementById("tab-vendas"),
         graficos: document.getElementById("tab-graficos")
     };
 
@@ -56,6 +58,7 @@ document.addEventListener("DOMContentLoaded", () => {
         prensa: document.getElementById("table-prensa-el"),
         bazar: document.getElementById("table-bazar-el"),
         cooperados: document.getElementById("table-cooperados-el"),
+        vendas: document.getElementById("table-vendas-el"),
         graficos: document.getElementById("container-graficos")
     };
 
@@ -138,6 +141,7 @@ document.addEventListener("DOMContentLoaded", () => {
             rawData.prensa = data.prensa || [];
             rawData.bazar = data.bazar || [];
             rawData.cooperados = data.cooperados || [];
+            rawData.vendas = data.vendas || [];
 
 
             // Renderiza as estatísticas e as tabelas
@@ -220,7 +224,8 @@ document.addEventListener("DOMContentLoaded", () => {
             triagem: filterDataset(rawData.triagem, "triagem"),
             prensa: filterDataset(rawData.prensa, "prensa"),
             bazar: filterDataset(rawData.bazar, "bazar"),
-            cooperados: filterDataset(rawData.cooperados, "cooperados")
+            cooperados: filterDataset(rawData.cooperados, "cooperados"),
+            vendas: filterDataset(rawData.vendas, "vendas")
         };
 
         renderStats(filtered);
@@ -354,10 +359,43 @@ document.addEventListener("DOMContentLoaded", () => {
                         </td>
                     </tr>
                 `;
+            } else if (activeTab === "vendas") {
+                const dataFormatadaVenda = formatarData(item.created_at);
+                rowHTML = `
+                    <tr class="hover:bg-gray-50 transition border-b border-gray-100">
+                        <td class="px-6 py-4"><span class="px-2 py-1 bg-blue-50 text-blue-800 rounded-full text-xs font-semibold">${coopNome}</span></td>
+                        <td class="px-6 py-4 text-gray-500">${dataFormatadaVenda}</td>
+                        <td class="px-6 py-4 font-mono text-xs">${item.nfe || '-'}</td>
+                        <td class="px-6 py-4 font-semibold text-gray-800">${item["comprador/razao_social"] || '-'}</td>
+                        <td class="px-6 py-4 capitalize">${item.material || '-'}</td>
+                        <td class="px-6 py-4 font-semibold text-blue-700">${parseFloat(item.quantidade_kg).toFixed(2)} Kg</td>
+                        <td class="px-6 py-4 font-bold text-green-700">R$ ${parseFloat(item.total).toFixed(2)}</td>
+                        <td class="px-6 py-4 text-center">
+                            <button onclick="window.excluirRegistroGeral('excluir_venda', ${item.id}, '${coopNome.toLowerCase()}')" title="Excluir" class="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition"><span class="material-symbols-outlined text-lg">delete</span></button>
+                        </td>
+                    </tr>
+                `;
             }
 
             tbody.insertAdjacentHTML("beforeend", rowHTML);
         });
+
+        // Totalizadores de Vendas no tfoot (ADM)
+        if (activeTab === "vendas") {
+            const totalKg = activeList.reduce((sum, item) => sum + (parseFloat(item.quantidade_kg) || 0), 0);
+            const totalReais = activeList.reduce((sum, item) => sum + (parseFloat(item.total) || 0), 0);
+            const tfootEl = document.getElementById("tfoot-vendas");
+            if (tfootEl) {
+                tfootEl.innerHTML = `
+                    <tr class="bg-gray-50 font-bold text-gray-700 border-t-2 border-gray-300">
+                        <td class="px-6 py-3" colspan="5">Totais (${activeList.length} registros)</td>
+                        <td class="px-6 py-3 text-blue-700">${totalKg.toFixed(2)} Kg</td>
+                        <td class="px-6 py-3 text-green-700">R$ ${totalReais.toFixed(2)}</td>
+                        <td></td>
+                    </tr>
+                `;
+            }
+        }
 
         // Sub-função de filtragem genérica
         function filterDataset(dataset, type) {
@@ -368,7 +406,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
 
                 // Filtro de Data
-                const dataCriacaoStr = item.data_do_recebimento || item.data_recebimento || item.data_triagem || item.data_prensa || item.bazar_data || item.data_criacao || item.data_bazar;
+                const dataCriacaoStr = item.data_do_recebimento || item.data_recebimento || item.data_triagem || item.data_prensa || item.bazar_data || item.data_criacao || item.data_bazar || item.created_at;
                 if (dataCriacaoStr) {
                     const itemData = new Date(dataCriacaoStr.split(" ")[0] || dataCriacaoStr); // Pega apenas a parte yyyy-mm-dd
                     
@@ -401,6 +439,9 @@ document.addEventListener("DOMContentLoaded", () => {
                         (item.telefone && String(item.telefone).includes(buscaTexto)) ||
                         (item.rg && String(item.rg).includes(buscaTexto)) ||
                         (item.endereco && item.endereco.toLowerCase().includes(buscaTexto)) ||
+                        (item.material && item.material.toLowerCase().includes(buscaTexto)) ||
+                        (item["comprador/razao_social"] && item["comprador/razao_social"].toLowerCase().includes(buscaTexto)) ||
+                        (item.nfe && String(item.nfe).includes(buscaTexto)) ||
                         (getCoopName(item.cooperativa_id).toLowerCase().includes(buscaTexto));
 
                     if (!matchesText) return false;
